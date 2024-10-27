@@ -2,30 +2,36 @@
 #include <omp.h>
 #include <opencv2/opencv.hpp>
 #include "utils.h"
+#include <vector>
+
+using namespace std;
+
+const string IMAGE_PATH = "../dataset/Train/";
 
 int main(int argc, char** argv) {
-    omp_set_num_threads(4);
-
+    omp_set_num_threads(1);
+    
     #pragma omp parallel
     {
         printf("Hello from process: %d\n", omp_get_thread_num());
     }
 
     #pragma omp single
-    {
+    {   
+        /*
         double value = 0.5;
         double sig = sigmoid(value);
         printf("Sigmoid of %lf is %lf\n", value, sig);
+        */
+        
+        vector<cv::Mat> images = getImages(IMAGE_PATH);
+        cout << "Loaded " << images.size() << " images." << endl;
+        cout << "Image shape: " << images[0].size() << endl;
 
-        std::string image_path = "../dataset/Train/dog.1.jpg";
-
-        cv::Mat image = cv::imread(image_path, cv::IMREAD_COLOR);
-        if(image.empty()) {
-            std::cerr << "Error: Could not open or find the image!" << std::endl;
-        }
-
-        cv::imshow("Loaded Image", image);
-        cv::waitKey(0);
+        vector<cv::Mat> flatten_images = getFlattenImages(images);
+        cout << "Loaded " << flatten_images.size() << " images." << endl;
+        cout << "Flatten image shape: " << flatten_images[0].size() << endl;
+        
     }
 
     return 0;
