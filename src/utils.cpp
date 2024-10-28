@@ -6,7 +6,7 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-double sigmoid(const double& x) {
+double activation(const double& x) {
     return 1.0 / (1.0 + exp(-x));
 }
 
