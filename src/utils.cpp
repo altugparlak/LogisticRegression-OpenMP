@@ -29,18 +29,32 @@ vector<cv::Mat> getImages(const string& images_path) {
 
 vector<cv::Mat> getFlattenImages(const vector<cv::Mat>& images) {
     vector<cv::Mat> flatten_images;
+    flatten_images.reserve(images.size());
 
+    #pragma omp parallel for
     for (int i = 0; i < images.size(); i++) {
-        const cv::Mat image = images[i];
-
-        if (image.empty()) {
+        if (images[i].empty()) {
             cerr << "Warning: Image at index " << i << " is empty and will be skipped." << endl;
             continue;
         }
+        cv::Mat flatten_image = images[i].reshape(1, 1);
 
-        cv::Mat flatten_image = image.reshape(1, 1);
+        #pragma omp critical
         flatten_images.push_back(flatten_image);
     }
 
     return flatten_images;
+}
+
+int normalize(vector<cv::Mat>& images) {
+    #pragma omp parallel for
+    for (int i = 0; i < images.size(); i++) {
+        if (images[i].empty()) {
+            cerr << "Warning: Image at index " << i << " is empty and will be skipped during normalization." << endl;
+            continue;
+        }
+        
+        images[i].convertTo(images[i], CV_32F, 1.0 / 255.0);
+    }
+    return 0;
 }
