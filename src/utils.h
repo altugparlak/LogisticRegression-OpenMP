@@ -8,7 +8,7 @@
 
 using namespace std;
 
-double sigmoid(const double& x);
+double activation(const double& x);
 
 vector<cv::Mat> getImages(const string& images_path);
 
