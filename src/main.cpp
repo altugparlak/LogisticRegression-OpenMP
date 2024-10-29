@@ -50,5 +50,6 @@ int main(int argc, char** argv) {
     std::cout << grads["dw"].size() << std::endl;
     std::cout << grads["db"].size() << std::endl;
 
+    // Test
     return 0;
 }
