@@ -35,6 +35,20 @@ int main(int argc, char** argv) {
         
     normalize(test_flattened_images);
     cout << "Normalized " << test_flattened_images.size() << " flattened test images." << endl;
+    
+    // Initialize w, b and label values
+    vector<int> true_label_set(64, 1);
+    vector<float> w(12288, 0.0);
+    vector<float> b(12288, 0.0);
+    
+    pair result = propagation(w, b, train_flattened_images, true_label_set);
+
+    unordered_map<string, vector<float>> grads = result.first;
+    float cost = result.second;
+
+    std::cout << "Cost: " << cost << std::endl;
+    std::cout << grads["dw"].size() << std::endl;
+    std::cout << grads["db"].size() << std::endl;
 
     return 0;
 }

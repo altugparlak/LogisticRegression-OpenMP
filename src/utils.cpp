@@ -6,6 +6,9 @@
 using namespace std;
 namespace fs = std::filesystem;
 
+/**
+ * @brief Sigmoid activation function.
+ */
 double activation(const double& x) {
     return 1.0 / (1.0 + exp(-x));
 }
@@ -59,4 +62,56 @@ int normalize(vector<cv::Mat>& images) {
         images[i].convertTo(images[i], CV_32F, 1.0 / 255.0);
     }
     return 0;
+}
+
+pair<unordered_map<string, vector<float>>, float> propagation(
+    const vector<float>& w, const vector<float>& b,
+    const vector<cv::Mat>& train_set, const vector<int>& true_label_set) {
+    
+    int m = train_set.size();
+    float cost = 0.0;
+    unordered_map<string, vector<float>> grads;
+    
+    vector<float> dw(w.size(), 0.0);
+    vector<float> db_sum(b.size(), 0.0);
+
+    // Forward propagation
+    #pragma omp parallel for reduction(+:cost)
+    for (int i = 0; i < m; i++) {
+        float z = 0.0;
+        cv::Mat X = train_set[i];
+        
+        for (int j = 0; j < w.size(); j++) {
+            // w^T * x
+            z += w[j] * X.at<float>(j);
+        }
+        
+        z += b[i];
+
+        // Sigmoid activation
+        float A = activation(z);
+        
+        // Compute cost
+        float y = true_label_set[i];
+        cost += -y * log(A) - (1 - y) * log(1 - A);
+        
+        // Calculate gradients
+        float dz = A - y;
+        for (int j = 0; j < w.size(); j++) {
+            // dz^t * X
+            dw[j] += dz * X.at<float>(j);
+            db_sum[j] += dz;
+        }
+    }
+
+    cost /= m;
+    for (int i = 0; i < w.size(); i++) {
+        dw[i] /= m;
+        db_sum[i] /= m;
+    }
+
+    grads["dw"] = dw;
+    grads["db"] = db_sum;
+
+    return make_pair(grads, cost);
 }
