@@ -14,7 +14,7 @@ vector<cv::Mat> getImages(const string& images_path) {
     vector<cv::Mat> images;
 
     for (const auto& entry : fs::directory_iterator(images_path)) {
-        image_path = entry.path();
+        auto image_path = entry.path();
         
         if (image_path.extension() == ".jpg") {
             cv::Mat img = cv::imread(image_path.string());
