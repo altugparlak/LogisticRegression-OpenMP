@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <opencv2/opencv.hpp>
 #include "utils.h"
-#include <vector>
 
 using namespace std;
 
@@ -36,20 +33,49 @@ int main(int argc, char** argv) {
     normalize(test_flattened_images);
     cout << "Normalized " << test_flattened_images.size() << " flattened test images." << endl;
     
-    // Initialize w, b and label values
-    vector<int> true_label_set(64, 1);
-    vector<float> w(12288, 0.0);
-    vector<float> b(12288, 0.0);
+    cv::Size size = train_images[0].size();
+    int label_size = size.width;
+    int w_size = size.width * size.height * 3;
     
-    pair result = propagation(w, b, train_flattened_images, true_label_set);
+    cout << "l:" << label_size << " w: " << w_size << endl;
+    // Initialize w, b and label values
+    vector<int> true_label_set(label_size, 1);
+    vector<float> w(w_size, 0.0);
+    vector<float> b(w_size, 0.0);
+    /*
+    // Initialize weights and bias
+    vector<float> w = {1.0, 2.0};  // This should be a vector with two elements
+    vector<float> b = {1.5, 1.5};  // Bias needs to be a vector as well
 
-    unordered_map<string, vector<float>> grads = result.first;
+    // Initialize training set (assuming you want to use cv::Mat)
+    vector<cv::Mat> X;
+    X.push_back((cv::Mat_<float>(1, 3) << 1.0, -2.0, -1.0)); // First example
+    X.push_back((cv::Mat_<float>(1, 3) << 3.0, 0.5, -3.2));  // Second example
+
+    // Initialize true labels
+    vector<int> Y = {1, 1, 0};  // Adjust the size if needed to match training set
+    */
+    // Call the propagation function
+    auto result = propagation(w, b, train_flattened_images, true_label_set);
+
+    // Access results
+    auto grads = result.first;
     float cost = result.second;
 
-    std::cout << "Cost: " << cost << std::endl;
-    std::cout << grads["dw"].size() << std::endl;
-    std::cout << grads["db"].size() << std::endl;
+    // Print the results
+    cout << "dw = ";
+    for (const auto& val : grads["dw"]) {
+        cout << val << " ";
+    }
+    cout << endl;
 
-    // Test
+    cout << "db = ";
+    for (const auto& val : grads["db"]) {
+        cout << val << " ";
+    }
+    cout << endl;
+
+    cout << "cost = " << cost << endl;
+    
     return 0;
 }
