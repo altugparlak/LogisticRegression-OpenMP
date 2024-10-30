@@ -71,17 +71,18 @@ pair<unordered_map<string, vector<float>>, float> propagation(
     int m_train = train_set.size();
     cv::Size size = train_set[0].size();
     int m = size.width*size.height;
+    cout << "m: " << m << endl;
     float cost = 0.0;
     unordered_map<string, vector<float>> grads;
     
     vector<float> dw(m_train, 0.0);
-    vector<float> db_sum(1, 0.0);
+    vector<float> db(1, 0.0);
 
     vector<float> z(m, 0.0);
     vector<float> dz(m, 0.0);
     vector<float> A(m, 0.0);
 
-    #pragma omp parallel
+    #pragma omp parallel shared(db) shared(dz) shared(dw)
 	{
 		#pragma omp for
 		for(int i = 0; i < m_train; i++)
@@ -100,8 +101,8 @@ pair<unordered_map<string, vector<float>>, float> propagation(
         {
             z[k] += b[0];
             A[k] = activation(z[k]);
+            // Clip A[k] to avoid exact 0 or 1
         }
-        
         #pragma omp barrier
 
         #pragma omp for
@@ -118,6 +119,7 @@ pair<unordered_map<string, vector<float>>, float> propagation(
 		for(int i = 0; i < m; i++)
 		{
             float y = true_label_set[i];
+            #pragma omp critical
             dz[i] = A[i] - y;
         }
         #pragma omp barrier
@@ -130,8 +132,13 @@ pair<unordered_map<string, vector<float>>, float> propagation(
             {
                 dw[j] += dz[k] * X.at<float>(k);
             }
+        }
+        #pragma omp barrier
+
+        #pragma omp for
+        for (int j = 0; j < m; j++) {
             #pragma omp critical
-            db_sum[0] += dz[j];
+            db[0] += dz[j];            
         }
         #pragma omp barrier
 
@@ -146,14 +153,14 @@ pair<unordered_map<string, vector<float>>, float> propagation(
         }
         #pragma omp single 
         {
-            db_sum[0] /= m;
+            db[0] /= m;
         }
 
         #pragma omp barrier
 	}
 
     grads["dw"] = dw;
-    grads["db"] = db_sum;
+    grads["db"] = db;
 
     return make_pair(grads, cost);
 }
@@ -170,8 +177,8 @@ tuple<unordered_map<string, vector<float>>,
     vector<float> b_copy = b;
 
     vector<float> costs(num_iterations, 0.0);
-    vector<float> dw;
-    vector<float> db;
+    vector<float> dw(12288, 0.0);
+    vector<float> db(1, 0.0);
 
     for (int i = 0; i < num_iterations; i++)
     {
@@ -184,11 +191,12 @@ tuple<unordered_map<string, vector<float>>,
         float cost = result.second;
 
         #pragma omp parallel for
-        for (int j = 0; j < w.size(); j++)
+        for (int j = 0; j < w_copy.size(); j++)
         {
             w_copy[j] = w_copy[j] - learning_rate * dw[j];
             b_copy[0] = b_copy[0] - learning_rate * db[0];
         }
+
         #pragma omp barrier
         cout << "Cost after iteration " << i << ": " << cost << endl;
         if ((i % 100) == 0) {

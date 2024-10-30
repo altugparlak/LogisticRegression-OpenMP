@@ -39,13 +39,13 @@ int main(int argc, char** argv) {
     
     cout << "l:" << label_size << " w: " << w_size << endl;
     // Initialize w, b and label values
-    //vector<int> true_label_set(label_size, 1);
-    //vector<float> w(w_size, 0.0);
-    //vector<float> b(w_size, 0.0);
+    vector<int> true_label_set(w_size, 1);
+    vector<float> w(w_size, 0.0);
+    vector<float> b(1, 0.0);
     
     // Initialize weights and bias
-    vector<float> w = {1.0, 2.0};  // This should be a vector with two elements
-    vector<float> b = {1.5, 1.5};  // Bias needs to be a vector as well
+    vector<float> w2 = {1.0, 2.0};  // This should be a vector with two elements
+    vector<float> b2 = {1.5};  // Bias needs to be a vector as well
 
     // Initialize training set (assuming you want to use cv::Mat)
     vector<cv::Mat> X;
@@ -56,20 +56,22 @@ int main(int argc, char** argv) {
     vector<int> Y = {1, 1, 0};  // Adjust the size if needed to match training set
     
     
-    auto result = optimize(w, b, X, Y, 100, 0.009);
-
-    /*
+    //auto result = optimize(w, b, train_flattened_images, true_label_set, 100, 0.009);
+    //auto result = optimize(w2, b2, X, Y, 100, 0.009);
+    //auto result = propagation(w, b, train_flattened_images, true_label_set);
+    auto result = propagation(w2, b2, X, Y);
+    
     // Access results
     auto grads = result.first;
     float cost = result.second;
-
+    /*
     // Print the results
     cout << "dw = ";
     for (const auto& val : grads["dw"]) {
         cout << val << " ";
     }
     cout << endl;
-
+    */
     cout << "db = ";
     for (const auto& val : grads["db"]) {
         cout << val << " ";
@@ -77,6 +79,8 @@ int main(int argc, char** argv) {
     cout << endl;
 
     cout << "cost = " << cost << endl;
-    */
+    
+    //auto result2 = optimize(w, b, train_flattened_images, true_label_set, 100, 0.009);
+
     return 0;
 }
