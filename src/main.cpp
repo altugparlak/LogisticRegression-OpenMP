@@ -39,10 +39,10 @@ int main(int argc, char** argv) {
     
     cout << "l:" << label_size << " w: " << w_size << endl;
     // Initialize w, b and label values
-    vector<int> true_label_set(label_size, 1);
-    vector<float> w(w_size, 0.0);
-    vector<float> b(w_size, 0.0);
-    /*
+    //vector<int> true_label_set(label_size, 1);
+    //vector<float> w(w_size, 0.0);
+    //vector<float> b(w_size, 0.0);
+    
     // Initialize weights and bias
     vector<float> w = {1.0, 2.0};  // This should be a vector with two elements
     vector<float> b = {1.5, 1.5};  // Bias needs to be a vector as well
@@ -54,10 +54,11 @@ int main(int argc, char** argv) {
 
     // Initialize true labels
     vector<int> Y = {1, 1, 0};  // Adjust the size if needed to match training set
-    */
-    // Call the propagation function
-    auto result = propagation(w, b, train_flattened_images, true_label_set);
+    
+    
+    auto result = optimize(w, b, X, Y, 100, 0.009);
 
+    /*
     // Access results
     auto grads = result.first;
     float cost = result.second;
@@ -76,6 +77,6 @@ int main(int argc, char** argv) {
     cout << endl;
 
     cout << "cost = " << cost << endl;
-    
+    */
     return 0;
 }
