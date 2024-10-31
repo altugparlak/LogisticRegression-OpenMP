@@ -15,42 +15,9 @@ float activation(const float& x) {
     return 1.0 / (1.0 + exp(-x));
 }
 
-Mat getImages2(const string& images_path) {
-    vector<cv::Mat> images;
-    int num_images = 0;
-
-    // Iterate over files and count images
-    for (const auto& entry : fs::directory_iterator(images_path)) {
-        auto image_path = entry.path();
-        
-        if (image_path.extension() == ".jpg") {
-            cv::Mat img = cv::imread(image_path.string());
-            if (!img.empty()) {
-                images.push_back(img);
-                num_images++;
-            } else {
-                cerr << "Failed to read image: " << entry.path().string() << endl;
-            }
-        }
-    }
-
-    // Initialize a single matrix to hold all flattened images
-    Mat all_flattened_images(num_images, 64 * 64 * 3, CV_32F);
-
-    // Flatten and store each image in a row of all_flattened_images
-    for (int i = 0; i < images.size(); i++) {
-        if (images[i].empty()) {
-            cerr << "Warning: Image at index " << i << " is empty and will be skipped." << endl;
-            continue;
-        }
-        Mat flattened_image = images[i].reshape(1, 1);  // Make it a single row
-        flattened_image.convertTo(flattened_image, CV_32F);  // Convert to float
-        // Normalize the image to range [0, 1]
-        flattened_image /= 255.0;  // Divide by 255 to scale pixel values
-        flattened_image.copyTo(all_flattened_images.row(i));  // Copy to corresponding row
-    }
-
-    return all_flattened_images;
+float safe_log(float x) {
+    // Clip to avoid undefined behavior with log(0)
+    return log(max(x, 1e-10f));
 }
 
 vector<cv::Mat> getImages(const string& images_path) {
@@ -116,7 +83,6 @@ pair<unordered_map<string, vector<float>>, float> propagation(
     int m = size.width*size.height;
     float cost = 0.0;
     unordered_map<string, vector<float>> grads;
-    cout << "m: " << m << endl << "m_train: " << m_train << endl; 
     vector<float> dw(m_train, 0.0);
     vector<float> db(1, 0.0);
 
@@ -153,7 +119,7 @@ pair<unordered_map<string, vector<float>>, float> propagation(
             float y = true_label_set[i];
 
             #pragma omp critical
-            cost += y * log(A[i]) + (1 - y) * log(1 - A[i]);
+            cost += y * safe_log(A[i]) + (1 - y) * safe_log(1 - A[i]);
 		}
         #pragma omp barrier
 
@@ -235,12 +201,18 @@ tuple<unordered_map<string, vector<float>>,
         #pragma omp parallel for
         for (int j = 0; j < w_copy.size(); j++)
         {
+            if(j == 0) {
+                //cout << "previous value of w: " << w_copy[j] << " --- dw: " << dw[j] << endl;
+            }
             w_copy[j] = w_copy[j] - learning_rate * dw[j];
             b_copy[0] = b_copy[0] - learning_rate * db[0];
+            if(j == 0) {
+                //cout << "new value of w: " << w_copy[j] << endl;
+            }
         }
 
         #pragma omp barrier
-        cout << "Cost after iteration " << i << ": " << cost << endl;
+        //cout << "Cost after iteration " << i << ": " << cost << endl;
         if ((i % 100) == 0) {
             costs.push_back(cost);
             cout << "Cost after iteration " << i << ": " << cost << endl;
@@ -253,4 +225,46 @@ tuple<unordered_map<string, vector<float>>,
     grads["dw"] = dw;
     grads["db"] = db;
     return make_tuple(params, grads, costs);
+}
+
+vector<int> predict(const vector<float>& w, const vector<float>& b, const vector<cv::Mat>& X_input) {
+
+    cv::Size size = X_input[0].size();
+    int m = size.width*size.height;
+    int m_train = X_input.size();
+
+    vector<int> Y_prediction(m, 0);
+    vector<float> z(m, 0.0);
+    vector<float> A(m, 0.0);
+
+    #pragma omp parallel
+	{
+		#pragma omp for
+		for(int i = 0; i < m_train; i++)
+		{
+			cv::Mat X = X_input[i];
+            
+            // np.dot(w.T, X)
+            for (int k = 0; k < m; k++)
+            {
+                z[k] += w[i] * X.at<float>(k);
+            }
+		}
+        #pragma omp barrier
+
+        #pragma omp for
+        for (int i = 0; i < m; i++)
+        {
+            // z + b
+            z[i] += b[0];
+            // sigmoid(z) --- > A = sigmoid(np.dot(w.T, X) + b)
+            A[i] = activation(z[i]);
+            if (A[i] > 0.5) 
+                Y_prediction[i] = 1;
+
+        }
+        #pragma omp barrier
+    }
+
+    return Y_prediction;
 }

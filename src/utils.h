@@ -13,8 +13,6 @@ using namespace std;
 
 float activation(const float& x);
 
-cv::Mat getImages2(const string& images_path);
-
 vector<cv::Mat> getImages(const string& images_path);
 
 vector<cv::Mat> getFlattenImages(const vector<cv::Mat>& images);
@@ -30,5 +28,7 @@ tuple<unordered_map<string, vector<float>>,
     const vector<float>& w, const vector<float>& b, 
     const vector<cv::Mat>& train_set, const vector<int>& true_label_set,
     int num_iterations, float learning_rate);
+
+vector<int> predict(const vector<float>& w, const vector<float>& b, const vector<cv::Mat>& X_input);
 
 #endif
