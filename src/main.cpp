@@ -22,42 +22,23 @@ int main(int argc, char** argv) {
     cout << "Loaded " << train_flattened_images.size() << " flattened train images." << endl;
     cout << "Flatten image shape: " << train_flattened_images[0].size() << endl;
     
-    vector<cv::Mat> transposed(12288, cv::Mat::zeros(1, train_flattened_images.size(), CV_32F));
-
+    // Initialize transposed matrix
+    vector<cv::Mat> transposed(12288);
+    #pragma omp parallel for
+    for (int i = 0; i < transposed.size(); i++) {
+        transposed[i] = cv::Mat::zeros(1, train_flattened_images.size(), CV_32F);
+    }
     // Fill the transposed matrix
     for (int i = 0; i < train_flattened_images.size(); i++) {
         for (int j = 0; j < 12288; j++) {
-            transposed[j].at<float>(0, i) = train_flattened_images[i].at<float>(j);
+            transposed[j].at<int>(i) = train_flattened_images[i].at<int>(j);
         }
     }
 
-
-    int flag = 0;
-    float t;
-    float r;
-    for (int j = 0; j < 12288; j++)
-    {
-        t = train_flattened_images[0].at<float>(j);
-        r = transposed[j].at<float>(0);
-        if(t != r) {
-            flag = 1;
-            cout << "Image is different!" << " at: " << j << endl;
-            break;
-        }
-    }
-
-
-
-    // Print the first value of both arrays for comparison
-    cout << "First value in train_flattened_images[0]: " << train_flattened_images[0].at<float>(0) << endl;
-    cout << "First value in transposed[0]: " << transposed[1].at<float>(0) << endl;
-    
     // Loop through each element in the transposed vector
     cout << "transposed size x: " << transposed.size() << endl;
     cout << "transposed size y: " << transposed[0].size() << endl;
  
-    normalize(transposed);
-    //cout << "n:" << transposed[0] << endl;
     //vector<cv::Mat> test_flattened_images = getFlattenImages(test_images);
     //cout << "Loaded " << test_flattened_images.size() << " flattened test images." << endl;
     //cout << "Flatten image shape: " << test_flattened_images[0].size() << endl;

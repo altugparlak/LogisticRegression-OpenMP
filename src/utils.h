@@ -13,6 +13,8 @@ using namespace std;
 
 float activation(const float& x);
 
+cv::Mat getImages2(const string& images_path);
+
 vector<cv::Mat> getImages(const string& images_path);
 
 vector<cv::Mat> getFlattenImages(const vector<cv::Mat>& images);

@@ -4,6 +4,8 @@
 #include <filesystem>
 
 using namespace std;
+using namespace cv;
+
 namespace fs = std::filesystem;
 
 /**
@@ -11,6 +13,44 @@ namespace fs = std::filesystem;
  */
 float activation(const float& x) {
     return 1.0 / (1.0 + exp(-x));
+}
+
+Mat getImages2(const string& images_path) {
+    vector<cv::Mat> images;
+    int num_images = 0;
+
+    // Iterate over files and count images
+    for (const auto& entry : fs::directory_iterator(images_path)) {
+        auto image_path = entry.path();
+        
+        if (image_path.extension() == ".jpg") {
+            cv::Mat img = cv::imread(image_path.string());
+            if (!img.empty()) {
+                images.push_back(img);
+                num_images++;
+            } else {
+                cerr << "Failed to read image: " << entry.path().string() << endl;
+            }
+        }
+    }
+
+    // Initialize a single matrix to hold all flattened images
+    Mat all_flattened_images(num_images, 64 * 64 * 3, CV_32F);
+
+    // Flatten and store each image in a row of all_flattened_images
+    for (int i = 0; i < images.size(); i++) {
+        if (images[i].empty()) {
+            cerr << "Warning: Image at index " << i << " is empty and will be skipped." << endl;
+            continue;
+        }
+        Mat flattened_image = images[i].reshape(1, 1);  // Make it a single row
+        flattened_image.convertTo(flattened_image, CV_32F);  // Convert to float
+        // Normalize the image to range [0, 1]
+        flattened_image /= 255.0;  // Divide by 255 to scale pixel values
+        flattened_image.copyTo(all_flattened_images.row(i));  // Copy to corresponding row
+    }
+
+    return all_flattened_images;
 }
 
 vector<cv::Mat> getImages(const string& images_path) {
@@ -42,7 +82,8 @@ vector<cv::Mat> getFlattenImages(const vector<cv::Mat>& images) {
             continue;
         }
         cv::Mat flatten_image = images[i].reshape(1, 1);
-        flatten_image.convertTo(flatten_image, CV_32F);  // Ensure float type
+        flatten_image.convertTo(flatten_image, CV_32F);
+        flatten_image /= 255.0;
         flatten_images.push_back(flatten_image);
     }
 
