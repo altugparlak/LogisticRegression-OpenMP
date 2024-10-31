@@ -36,32 +36,34 @@ vector<cv::Mat> getFlattenImages(const vector<cv::Mat>& images) {
     vector<cv::Mat> flatten_images;
     flatten_images.reserve(images.size());
 
-    #pragma omp parallel for
     for (int i = 0; i < images.size(); i++) {
         if (images[i].empty()) {
             cerr << "Warning: Image at index " << i << " is empty and will be skipped." << endl;
             continue;
         }
         cv::Mat flatten_image = images[i].reshape(1, 1);
-
-        #pragma omp critical
+        flatten_image.convertTo(flatten_image, CV_32F);  // Ensure float type
         flatten_images.push_back(flatten_image);
     }
 
     return flatten_images;
 }
 
-void normalize(vector<cv::Mat>& images) {
+void normalize(std::vector<cv::Mat>& images) {
     #pragma omp parallel for
     for (int i = 0; i < images.size(); i++) {
         if (images[i].empty()) {
-            cerr << "Warning: Image at index " << i << " is empty and will be skipped during normalization." << endl;
+            std::cerr << "Warning: Image at index " << i << " is empty and will be skipped during normalization." << std::endl;
             continue;
         }
-        
-        images[i].convertTo(images[i], CV_32F, 1.0 / 255.0);
+
+        // Convert to CV_32F and normalize to the range [0.0, 1.0]
+        cv::Mat normalized_image;
+        images[i].convertTo(normalized_image, CV_32F, 1.0 / 255.0);
+
+        // Copy the normalized image back to the original vector
+        images[i] = normalized_image;
     }
-    return;
 }
 
 pair<unordered_map<string, vector<float>>, float> propagation(
@@ -71,10 +73,9 @@ pair<unordered_map<string, vector<float>>, float> propagation(
     int m_train = train_set.size();
     cv::Size size = train_set[0].size();
     int m = size.width*size.height;
-    cout << "m: " << m << endl;
     float cost = 0.0;
     unordered_map<string, vector<float>> grads;
-    
+    cout << "m: " << m << endl << "m_train: " << m_train << endl; 
     vector<float> dw(m_train, 0.0);
     vector<float> db(1, 0.0);
 
