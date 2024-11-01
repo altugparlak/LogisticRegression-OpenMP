@@ -10,7 +10,7 @@ LIBRARY_PATH = /usr/local/opt/libomp/lib/
 
 TARGET = main.exe
 
-SRC = ../src/main.cpp ../src/utils.cpp
+SRC = ../src/main.cpp ../src/utils.cpp ../src/test.cpp
 
 $(TARGET): $(SRC)
 	CPATH=$(INCLUDE_PATH):$(OPENCV_INCLUDE) LIBRARY_PATH=$(LIBRARY_PATH):$(OPENCV_LIB) $(CC) $(SRC) -o $(TARGET) $(CFLAGS) -lopencv_core -lopencv_imgcodecs -lopencv_highgui

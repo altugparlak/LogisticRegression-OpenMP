@@ -66,11 +66,13 @@ void prediction_test1();
  * @param b Vector of bias terms
  * @param train_set Input data set
  * @param true_label_set Labels for training data
+ * @param test_set Test data set
  * @param num_iterations Number of optimization iterations
  * @param learning_rate Step size for optimization
  */
 void prediction_test2(const vector<float>& w, const vector<float>& b, 
-    const vector<cv::Mat>& train_set, const vector<int>& true_label_set,
+    const vector<cv::Mat>& train_set, const vector<int>& train_true_label_set,
+    const vector<cv::Mat>& test_set, const vector<int>& test_true_label_set,
     int num_iterations, float learning_rate);
 
 #endif

@@ -8,9 +8,6 @@ using namespace cv;
 
 namespace fs = std::filesystem;
 
-/**
- * @brief Sigmoid activation function.
- */
 float activation(const float& x) {
     return 1.0 / (1.0 + exp(-x));
 }
@@ -55,23 +52,6 @@ vector<cv::Mat> getFlattenImages(const vector<cv::Mat>& images) {
     }
 
     return flatten_images;
-}
-
-void normalize(std::vector<cv::Mat>& images) {
-    #pragma omp parallel for
-    for (int i = 0; i < images.size(); i++) {
-        if (images[i].empty()) {
-            std::cerr << "Warning: Image at index " << i << " is empty and will be skipped during normalization." << std::endl;
-            continue;
-        }
-
-        // Convert to CV_32F and normalize to the range [0.0, 1.0]
-        cv::Mat normalized_image;
-        images[i].convertTo(normalized_image, CV_32F, 1.0 / 255.0);
-
-        // Copy the normalized image back to the original vector
-        images[i] = normalized_image;
-    }
 }
 
 pair<unordered_map<string, vector<float>>, float> propagation(
@@ -267,4 +247,20 @@ vector<int> predict(const vector<float>& w, const vector<float>& b, const vector
     }
 
     return Y_prediction;
+}
+
+double calculate_accuracy(const std::vector<int>& Y_prediction, const std::vector<int>& Y) {
+    if (Y_prediction.size() != Y.size()) {
+        std::cerr << "Error: Vectors must be the same size." << std::endl;
+        return -1.0;
+    }
+
+    double mean_abs_error = 0.0;
+    for (size_t i = 0; i < Y.size(); ++i) {
+        mean_abs_error += std::abs(Y_prediction[i] - Y[i]);
+    }
+    mean_abs_error /= Y.size();
+
+    double accuracy = 100.0 - mean_abs_error * 100.0;
+    return accuracy;
 }

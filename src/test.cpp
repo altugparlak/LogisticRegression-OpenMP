@@ -86,10 +86,11 @@ void prediction_test1() {
 }
 
 void prediction_test2(const vector<float>& w, const vector<float>& b, 
-    const vector<cv::Mat>& train_set, const vector<int>& true_label_set,
+    const vector<cv::Mat>& train_set, const vector<int>& train_true_label_set,
+    const vector<cv::Mat>& test_set, const vector<int>& test_true_label_set,
     int num_iterations, float learning_rate) {
     cout << "_____________ Prediction Test - 2 ____________" << endl;
-    auto result = optimize(w, b, train_set, true_label_set, num_iterations, learning_rate);
+    auto result = optimize(w, b, train_set, train_true_label_set, num_iterations, learning_rate);
     
     auto params = std::get<0>(result);
     auto grads = std::get<1>(result);
@@ -98,8 +99,11 @@ void prediction_test2(const vector<float>& w, const vector<float>& b,
     vector<float> w_0 = params["w"];
     vector<float> b_0 = params["b"];
 
-    // To-Do: Handle prediction
-    //Y_prediction_test = predict(w, b, X_test)
-    
+    vector<int> Y_prediction_test = predict(w_0, b_0, test_set);
+    vector<int> Y_prediction_train = predict(w_0, b_0, train_set);
+
+    cout << "Train accuracy: " << calculate_accuracy(Y_prediction_train, train_true_label_set) << " %" << endl;
+    cout << "Test accuracy: " << calculate_accuracy(Y_prediction_test, test_true_label_set) << " %" << endl;
+
     cout << "______________________________________________" << endl;
 }
