@@ -83,6 +83,8 @@ Cost after iteration 2400: 0.294056
 Cost after iteration 2500: 0.256254
 Train accuracy: 91.1877 %
 Test accuracy: 61.4286 %
+______________________________________________
+Program completed in 158 seconds.
 ```
 
 <!-- REQUIREMENTS -->
