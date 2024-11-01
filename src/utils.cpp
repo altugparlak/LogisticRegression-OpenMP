@@ -70,9 +70,9 @@ pair<unordered_map<string, vector<float>>, float> propagation(
     vector<float> dz(m, 0.0);
     vector<float> A(m, 0.0);
 
-    #pragma omp parallel shared(db) shared(dz) shared(dw)
+    #pragma omp parallel shared(cost) shared(db) shared(dz) shared(dw)
 	{
-		#pragma omp for
+		#pragma omp for schedule(dynamic)
 		for(int i = 0; i < m_train; i++)
 		{
 			cv::Mat X = train_set[i];
@@ -84,7 +84,7 @@ pair<unordered_map<string, vector<float>>, float> propagation(
 		}
         #pragma omp barrier
 
-        #pragma omp for
+        #pragma omp for schedule(dynamic)
         for (int k = 0; k < m; k++)
         {
             z[k] += b[0];
@@ -93,26 +93,27 @@ pair<unordered_map<string, vector<float>>, float> propagation(
         }
         #pragma omp barrier
 
-        #pragma omp for
+        #pragma omp for schedule(dynamic)
 		for(int i = 0; i < m; i++)
 		{
             float y = true_label_set[i];
 
             #pragma omp critical
-            cost += y * safe_log(A[i]) + (1 - y) * safe_log(1 - A[i]);
+            {
+                cost += y * safe_log(A[i]) + (1 - y) * safe_log(1 - A[i]);
+            }
 		}
         #pragma omp barrier
 
-        #pragma omp for
+        #pragma omp for schedule(dynamic)
 		for(int i = 0; i < m; i++)
 		{
             float y = true_label_set[i];
-            #pragma omp critical
             dz[i] = A[i] - y;
         }
         #pragma omp barrier
 
-        #pragma omp for
+        #pragma omp for schedule(dynamic)
         for (int j = 0; j < m_train; j++) {
             cv::Mat X = train_set[j];
 
@@ -123,24 +124,23 @@ pair<unordered_map<string, vector<float>>, float> propagation(
         }
         #pragma omp barrier
 
-        #pragma omp for
+        #pragma omp for schedule(dynamic)
         for (int j = 0; j < m; j++) {
             #pragma omp critical
-            db[0] += dz[j];            
+            {
+                db[0] += dz[j];
+            }         
         }
         #pragma omp barrier
+
+        #pragma omp for schedule(dynamic)
+        for (int i = 0; i < m_train; i++) {
+            dw[i] /= m;
+        }
 
         #pragma omp single
         {
             cost /= -m;
-        }
-
-        #pragma omp for
-        for (int i = 0; i < m_train; i++) {
-            dw[i] /= m;
-        }
-        #pragma omp single 
-        {
             db[0] /= m;
         }
 
@@ -178,21 +178,14 @@ tuple<unordered_map<string, vector<float>>,
         db = grads["db"];
         float cost = result.second;
 
-        #pragma omp parallel for
+        #pragma omp parallel for schedule(dynamic)
         for (int j = 0; j < w_copy.size(); j++)
         {
-            if(j == 0) {
-                //cout << "previous value of w: " << w_copy[j] << " --- dw: " << dw[j] << endl;
-            }
             w_copy[j] = w_copy[j] - learning_rate * dw[j];
             b_copy[0] = b_copy[0] - learning_rate * db[0];
-            if(j == 0) {
-                //cout << "new value of w: " << w_copy[j] << endl;
-            }
         }
 
         #pragma omp barrier
-        //cout << "Cost after iteration " << i << ": " << cost << endl;
         if ((i % 100) == 0) {
             costs.push_back(cost);
             cout << "Cost after iteration " << i << ": " << cost << endl;
@@ -219,7 +212,7 @@ vector<int> predict(const vector<float>& w, const vector<float>& b, const vector
 
     #pragma omp parallel
 	{
-		#pragma omp for
+		#pragma omp for schedule(dynamic)
 		for(int i = 0; i < m_train; i++)
 		{
 			cv::Mat X = X_input[i];
@@ -232,7 +225,7 @@ vector<int> predict(const vector<float>& w, const vector<float>& b, const vector
 		}
         #pragma omp barrier
 
-        #pragma omp for
+        #pragma omp for schedule(dynamic)
         for (int i = 0; i < m; i++)
         {
             // z + b

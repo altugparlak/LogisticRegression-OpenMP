@@ -7,10 +7,12 @@
 #include <unordered_map>
 #include <tuple>
 #include <numeric>
+#include <chrono>
 #include <opencv2/opencv.hpp>
 #include <omp.h>
 
 using namespace std;
+using namespace std::chrono;
 
 /**
  * @brief Computes the sigmoid activation function for a given input.

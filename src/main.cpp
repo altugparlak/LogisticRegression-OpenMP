@@ -7,8 +7,21 @@ const string TRAIN_IMAGE_PATH = "../dataset/Train/";
 const string TEST_IMAGE_PATH = "../dataset/Test/";
 
 int main(int argc, char** argv) {
-    omp_set_num_threads(100);
-    
+    if (argc != 4) {
+        cerr << "Usage: " << argv[0] << " <num_threads> <num_iterations> <learning_rate>" << endl;
+        return EXIT_FAILURE;
+    }
+
+    int num_threads = stoi(argv[1]);
+    int num_iterations = stoi(argv[2]);
+    float learning_rate = stof(argv[3]);
+
+    omp_set_num_threads(num_threads);
+    cout << "Threads: " << num_threads << endl 
+    << "Iterations: " << num_iterations << endl
+    << "Learning Rate: " << learning_rate << endl;
+    cout << "================" << endl;
+    auto start_time = high_resolution_clock::now();
     /* ----------------------------- Get Input Data ----------------------------- */
     // Load images
     vector<cv::Mat> train_images = getImages(TRAIN_IMAGE_PATH);
@@ -83,11 +96,16 @@ int main(int argc, char** argv) {
     //propagation_test1();
     //propagation_test2(w, b, transposed, true_label_set);
     //optimization_test1();
-    //optimization_test2(w, b, transposed_train_set, train_true_label_set, 301, 0.009);
+    //optimization_test2(w, b, transposed_train_set, train_true_label_set, num_iterations, learning_rate);
     //prediction_test1();
-    prediction_test2(w, b, transposed_train_set, train_true_label_set, transposed_test_set, test_true_label_set, 1801, 0.009);
+    prediction_test2(w, b, transposed_train_set, train_true_label_set, transposed_test_set, test_true_label_set, num_iterations, learning_rate);
 
     /* -------------------------------------------------------------------------- */
     
-    return 0;
+    auto end_time = high_resolution_clock::now();
+    auto duration = duration_cast<seconds>(end_time - start_time);
+
+    cout << "Program completed in " << duration.count() << " seconds." << endl;
+
+    return EXIT_SUCCESS;
 }
