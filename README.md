@@ -36,8 +36,8 @@ Ensure that OpenCV and OpenMP are installed before building the project:
 <!-- RESULTS -->
 ## Results
 ```
-Threads: 120
-Iterations: 2501
+Threads: 10
+Iterations: 3001
 Learning Rate: 0.005
 ================
 Loaded 261 train images.
@@ -56,35 +56,40 @@ true label size: 261
 true label size: 70
 _____________ Prediction Test - 2 ____________
 Cost after iteration 0: 18.5266
-Cost after iteration 100: 5.83352
-Cost after iteration 200: 5.84843
-Cost after iteration 300: 5.96152
-Cost after iteration 400: 5.66537
-Cost after iteration 500: 5.84278
-Cost after iteration 600: 5.57628
-Cost after iteration 700: 5.42906
-Cost after iteration 800: 5.33973
-Cost after iteration 900: 5.19019
-Cost after iteration 1000: 4.87878
-Cost after iteration 1100: 4.73885
-Cost after iteration 1200: 4.31415
-Cost after iteration 1300: 3.86874
-Cost after iteration 1400: 3.27671
-Cost after iteration 1500: 2.75204
-Cost after iteration 1600: 2.43861
-Cost after iteration 1700: 1.79153
-Cost after iteration 1800: 1.20521
-Cost after iteration 1900: 0.879771
-Cost after iteration 2000: 0.674454
-Cost after iteration 2100: 0.648342
-Cost after iteration 2200: 0.411896
-Cost after iteration 2300: 0.322047
-Cost after iteration 2400: 0.294056
-Cost after iteration 2500: 0.256254
-Train accuracy: 91.1877 %
-Test accuracy: 61.4286 %
+Cost after iteration 100: 5.89726
+Cost after iteration 200: 5.7179
+Cost after iteration 300: 5.68837
+Cost after iteration 400: 5.65021
+Cost after iteration 500: 5.42075
+Cost after iteration 600: 5.24648
+Cost after iteration 700: 5.04455
+Cost after iteration 800: 4.92018
+Cost after iteration 900: 4.78962
+Cost after iteration 1000: 4.52974
+Cost after iteration 1100: 4.23881
+Cost after iteration 1200: 3.83913
+Cost after iteration 1300: 3.4368
+Cost after iteration 1400: 3.05164
+Cost after iteration 1500: 2.63407
+Cost after iteration 1600: 2.2617
+Cost after iteration 1700: 2.01017
+Cost after iteration 1800: 1.45863
+Cost after iteration 1900: 1.11906
+Cost after iteration 2000: 0.785798
+Cost after iteration 2100: 0.601083
+Cost after iteration 2200: 0.532884
+Cost after iteration 2300: 0.391027
+Cost after iteration 2400: 0.30409
+Cost after iteration 2500: 0.300219
+Cost after iteration 2600: 0.282101
+Cost after iteration 2700: 0.195868
+Cost after iteration 2800: 0.177084
+Cost after iteration 2900: 0.185942
+Cost after iteration 3000: 0.189521
+Train accuracy: 95.4023 %
+Test accuracy: 65.7143 %
 ______________________________________________
-Program completed in 158 seconds.
+Program completed in 95 seconds.
 ```
 
 <!-- REQUIREMENTS -->
