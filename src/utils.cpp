@@ -70,44 +70,41 @@ pair<unordered_map<string, vector<float>>, float> propagation(
     vector<float> dz(m, 0.0);
     vector<float> A(m, 0.0);
 
-    #pragma omp parallel shared(cost) shared(db) shared(dz) shared(dw)
+    #pragma omp parallel shared(cost) shared(db)
 	{
 		#pragma omp for schedule(dynamic)
-		for(int i = 0; i < m_train; i++)
-		{
+		for(int i = 0; i < m_train; i++) {
 			cv::Mat X = train_set[i];
-
-            for (int k = 0; k < m; k++)
-            {
+            for (int k = 0; k < m; k++) {
                 z[k] += w[i] * X.at<float>(k);
             }
 		}
         #pragma omp barrier
 
         #pragma omp for schedule(dynamic)
-        for (int k = 0; k < m; k++)
-        {
+        for (int k = 0; k < m; k++) {
             z[k] += b[0];
             A[k] = activation(z[k]);
             // Clip A[k] to avoid exact 0 or 1
         }
         #pragma omp barrier
 
+        float local_cost = 0.0;
         #pragma omp for schedule(dynamic)
-		for(int i = 0; i < m; i++)
-		{
+        for(int i = 0; i < m; i++) {
             float y = true_label_set[i];
+            local_cost += y * safe_log(A[i]) + (1 - y) * safe_log(1 - A[i]);
+        }
 
-            #pragma omp critical
-            {
-                cost += y * safe_log(A[i]) + (1 - y) * safe_log(1 - A[i]);
-            }
-		}
+        #pragma omp critical
+        {
+            cost += local_cost;
+        }
+
         #pragma omp barrier
 
         #pragma omp for schedule(dynamic)
-		for(int i = 0; i < m; i++)
-		{
+		for(int i = 0; i < m; i++) {
             float y = true_label_set[i];
             dz[i] = A[i] - y;
         }
@@ -117,19 +114,17 @@ pair<unordered_map<string, vector<float>>, float> propagation(
         for (int j = 0; j < m_train; j++) {
             cv::Mat X = train_set[j];
 
-            for (int k = 0; k < m; k++)
-            {
+            for (int k = 0; k < m; k++) {
                 dw[j] += dz[k] * X.at<float>(k);
             }
         }
         #pragma omp barrier
-
-        #pragma omp for schedule(dynamic)
-        for (int j = 0; j < m; j++) {
-            #pragma omp critical
-            {
+        
+        #pragma omp single
+        {
+            for (int j = 0; j < m; j++) {
                 db[0] += dz[j];
-            }         
+            }
         }
         #pragma omp barrier
 
@@ -164,12 +159,11 @@ tuple<unordered_map<string, vector<float>>,
     vector<float> w_copy = w;
     vector<float> b_copy = b;
 
-    vector<float> costs(num_iterations, 0.0);
-    vector<float> dw(12288, 0.0);
-    vector<float> db(1, 0.0);
+    vector<float> costs;
+    vector<float> dw;
+    vector<float> db;
 
-    for (int i = 0; i < num_iterations; i++)
-    {
+    for (int i = 0; i < num_iterations; i++) {
         auto result = propagation(w_copy, b_copy, train_set, true_label_set);
 
         // Access results
@@ -186,6 +180,8 @@ tuple<unordered_map<string, vector<float>>,
         }
 
         #pragma omp barrier
+
+        #pragma omp single
         if ((i % 100) == 0) {
             costs.push_back(cost);
             cout << "Cost after iteration " << i << ": " << cost << endl;
@@ -213,21 +209,18 @@ vector<int> predict(const vector<float>& w, const vector<float>& b, const vector
     #pragma omp parallel
 	{
 		#pragma omp for schedule(dynamic)
-		for(int i = 0; i < m_train; i++)
-		{
+		for(int i = 0; i < m_train; i++) {
 			cv::Mat X = X_input[i];
             
             // np.dot(w.T, X)
-            for (int k = 0; k < m; k++)
-            {
+            for (int k = 0; k < m; k++) {
                 z[k] += w[i] * X.at<float>(k);
             }
 		}
         #pragma omp barrier
 
         #pragma omp for schedule(dynamic)
-        for (int i = 0; i < m; i++)
-        {
+        for (int i = 0; i < m; i++) {
             // z + b
             z[i] += b[0];
             // sigmoid(z) --- > A = sigmoid(np.dot(w.T, X) + b)
@@ -256,4 +249,32 @@ double calculate_accuracy(const std::vector<int>& Y_prediction, const std::vecto
 
     double accuracy = 100.0 - mean_abs_error * 100.0;
     return accuracy;
+}
+
+void plot_learning_curve(const vector<float>& costs) {
+    std::ofstream dataFile("data.txt");
+    if (!dataFile) {
+        std::cerr << "Error creating data file." << std::endl;
+        return;
+    }
+
+    for (int i = 0; i < costs.size(); ++i) {
+        dataFile << i * 100 << " " << costs[i] << "\n";
+    }
+    dataFile.close();
+
+    std::ofstream gnuplotScript("plot.gp");
+    if (!gnuplotScript) {
+        std::cerr << "Error creating Gnuplot script." << std::endl;
+        return;
+    }
+    
+    gnuplotScript << "set title 'Plot of learning curve'\n";
+    gnuplotScript << "set xlabel 'number of iteration'\n";
+    gnuplotScript << "set ylabel 'cost'\n";
+    gnuplotScript << "set grid\n";
+    gnuplotScript << "plot 'data.txt' with linespoints title 'learning curve'\n";
+    gnuplotScript.close();
+
+    system("gnuplot -p plot.gp");
 }

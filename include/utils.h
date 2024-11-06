@@ -8,6 +8,9 @@
 #include <tuple>
 #include <numeric>
 #include <chrono>
+#include <fstream>
+#include <cstdlib>
+#include <ctime>
 #include <opencv2/opencv.hpp>
 #include <omp.h>
 
@@ -87,5 +90,7 @@ vector<int> predict(const vector<float>& w, const vector<float>& b, const vector
  * @return Accuracy as a percentage.
  */
 double calculate_accuracy(const vector<int>& Y_prediction, const vector<int>& Y);
+
+void plot_learning_curve(const vector<float>& costs);
 
 #endif

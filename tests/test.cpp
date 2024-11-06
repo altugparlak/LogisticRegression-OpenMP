@@ -106,4 +106,5 @@ void prediction_test2(const vector<float>& w, const vector<float>& b,
     cout << "Test accuracy: " << calculate_accuracy(Y_prediction_test, test_true_label_set) << " %" << endl;
 
     cout << "______________________________________________" << endl;
+    plot_learning_curve(costs);
 }

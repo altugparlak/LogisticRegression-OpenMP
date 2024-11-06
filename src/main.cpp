@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
     /* ---------------------------- Matrix transpose ---------------------------- */
     // Initialize transposed matrix
     vector<cv::Mat> transposed_train_set(w_size);
-    #pragma omp parallel for
+    #pragma omp for schedule(dynamic)
     for (int i = 0; i < transposed_train_set.size(); i++) {
         transposed_train_set[i] = cv::Mat::zeros(1, train_flattened_images.size(), CV_32F);
     }
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 
     // Initialize transposed matrix
     vector<cv::Mat> transposed_test_set(w_size);
-    #pragma omp parallel for
+    #pragma omp for schedule(dynamic)
     for (int i = 0; i < transposed_test_set.size(); i++) {
         transposed_test_set[i] = cv::Mat::zeros(1, test_flattened_images.size(), CV_32F);
     }
@@ -77,6 +77,7 @@ int main(int argc, char** argv) {
     vector<int> train_true_label_set(train_images.size(), 1);
     cout << "true label size: " << train_true_label_set.size() << endl;
     // None-dog images: 0
+    #pragma omp for schedule(dynamic)
     for (int i = 210; i < train_true_label_set.size(); i++)
         train_true_label_set[i] = 0;
 
@@ -88,7 +89,7 @@ int main(int argc, char** argv) {
         test_true_label_set[i] = 0;
     
     /* -------------------------------------------------------------------------- */
-    vector<float> w(w_size, -0.2f);
+    vector<float> w(w_size, 0.0f);
     vector<float> b = {0.0};
     /* -------------------------------------------------------------------------- */
     /* ------------------------------ Test Section ------------------------------ */
